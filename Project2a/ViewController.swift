@@ -30,11 +30,12 @@ class ViewController: UIViewController, ARSKViewDelegate {
         }
     }
     
+    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
         // Create a session configuration
-        let configuration = ARWorldTrackingConfiguration()
+        let configuration = AROrientationTrackingConfiguration()
 
         // Run the view's session
         sceneView.session.run(configuration)
@@ -54,12 +55,11 @@ class ViewController: UIViewController, ARSKViewDelegate {
     
     // MARK: - ARSKViewDelegate
     
+    //this is where the SKNode gets placed by ARKit
     func view(_ view: ARSKView, nodeFor anchor: ARAnchor) -> SKNode? {
-        // Create and configure a node for the anchor added to the view's session.
-        let labelNode = SKLabelNode(text: "👾")
-        labelNode.horizontalAlignmentMode = .center
-        labelNode.verticalAlignmentMode = .center
-        return labelNode;
+        
+        //this is how we'll get the anchors, which is the placeholder for our targets, to display a target image
+        return SKSpriteNode(imageNamed: "target");
     }
     
     func session(_ session: ARSession, didFailWithError error: Error) {
