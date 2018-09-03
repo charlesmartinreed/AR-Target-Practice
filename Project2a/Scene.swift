@@ -23,6 +23,9 @@ class Scene: SKScene {
         }
     }
     
+    //we need to track when the game begin to understand how quickly the player cleared out the targets
+    let startTime = Date()
+    
     override func didMove(to view: SKView) {
         
         remainingLabel.fontSize = 36
@@ -84,28 +87,50 @@ class Scene: SKScene {
         sceneView.session.add(anchor: anchor)
     }
     
-    override func update(_ currentTime: TimeInterval) {
-        // Called before each frame is rendered
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+       //grab the touch info and the location, use that information to detect when sprite was hit
+        guard let touch = touches.first else { return }
+        let location = touch.location(in: self)
+        let hit = nodes(at: location)
+        
+        //if there's a sprite here, remove it using our animation and decrement the targetCount
+        if let sprite = hit.first {
+            
+            let scaleOut = SKAction.scale(to: 2, duration: 0.2)
+            let fadeOut = SKAction.fadeOut(withDuration: 0.2)
+            let group = SKAction.group([scaleOut, fadeOut])
+            let sequence = SKAction.sequence([group, SKAction.removeFromParent()])
+            
+            sprite.run(sequence)
+            targetCount -= 1
+            
+            if targetsCreated == 20 && targetCount == 0 {
+                gameOver()
+            }
+            
+        }
     }
     
-    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        guard let sceneView = self.view as? ARSKView else {
-            return
-        }
+    func gameOver() {
+        //remove remaining label
+        remainingLabel.removeFromParent()
         
-        // Create anchor using the camera's current position
-        if let currentFrame = sceneView.session.currentFrame {
-            
-            // Create a transform with a translation of 0.2 meters in front of the camera
-            var translation = matrix_identity_float4x4
-            translation.columns.3.z = -0.2
-            //multiplying the two matrices
-            let transform = simd_mul(currentFrame.camera.transform, translation)
-            
-            // Add a new anchor to the session
-            // this represents where data in your AR kit app should go
-            let anchor = ARAnchor(transform: transform)
-            sceneView.session.add(anchor: anchor)
-        }
+        //create new sprite node from GameOver
+        let gameOver = SKSpriteNode(imageNamed: "gameOver")
+        addChild(gameOver)
+        
+        //create a new date and determine how long that date is from the startTime
+        let timeTaken = Date().timeIntervalSince(startTime)
+        
+        //create SKLabelNode to show that time
+        let timeLabel = SKLabelNode(text: "Time taken: \(Int(timeTaken)) seconds")
+        timeLabel.fontSize = 36
+        timeLabel.fontName = "AmericanTypewriter"
+        timeLabel.color = .white
+        timeLabel.position = CGPoint(x: 0, y: -view!.frame.midY + 50)
+        
+        addChild(timeLabel)
+        
+        
     }
 }
